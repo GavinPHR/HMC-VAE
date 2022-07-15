@@ -129,7 +129,7 @@ else:
 for epoch in tqdm(range(1, 11)):
     train_hmc()
     if tensorboard and epoch % args.eval_interval == 0:
-        elbo, hmc_bound = eval_variational()
+        elbo, hmc_bound = eval_hmc()
         tensorboard.add_scalar("elbo", elbo, 100 + epoch)
         tensorboard.add_scalar("hmc_bound", hmc_bound, 100 + epoch)
 
