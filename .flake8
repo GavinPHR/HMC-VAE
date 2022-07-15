@@ -1,0 +1,4 @@
+[flake8]
+    ignore = W605
+    # exclude = 
+    max-line-length = 100

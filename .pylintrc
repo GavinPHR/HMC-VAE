@@ -1,0 +1,22 @@
+[MASTER]
+init-hook='import sys; sys.path.append(".")'
+
+[MESSAGES CONTROL]
+disable=
+    anomalous-backslash-in-string,
+    invalid-name,
+    no-member,
+    missing-module-docstring,
+    fixme,
+    missing-function-docstring,
+    too-many-locals,
+    too-many-instance-attributes,
+    too-many-arguments,
+    duplicate-code,
+    unused-variable,
+    unbalanced-tuple-unpacking,
+    empty-docstring,
+    missing-class-docstring,
+    abstract-method,
+    no-self-use
+    
