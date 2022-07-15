@@ -112,15 +112,19 @@ def eval_hmc():
     return torch.cat(elbos).mean().item(), torch.cat(hmc_bounds).mean().item()
 
 
-for epoch in tqdm(range(1, 101)):
-    train_variational()
-    if tensorboard and epoch % args.eval_interval == 0:
-        elbo = eval_variational()
-        tensorboard.add_scalar("elbo", elbo, epoch)
-
-os.makedirs(os.path.join(args.savedir, args.experiment_name), exist_ok=True)
 path = os.path.join(args.savedir, args.experiment_name, "variational")
-torch.save({"model_state_dict": model.state_dict()}, path)
+if os.path.exists(path):
+    checkpoint = torch.load(path, map_location=device)
+    model.load_state_dict(checkpoint["model_state_dict"])
+else:
+    for epoch in tqdm(range(1, 101)):
+        train_variational()
+        if tensorboard and epoch % args.eval_interval == 0:
+            elbo = eval_variational()
+            tensorboard.add_scalar("elbo", elbo, epoch)
+
+    os.makedirs(os.path.join(args.savedir, args.experiment_name), exist_ok=True)
+    torch.save({"model_state_dict": model.state_dict()}, path)
 
 for epoch in tqdm(range(1, 11)):
     train_hmc()
