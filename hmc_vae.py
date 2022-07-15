@@ -28,7 +28,7 @@ class HMCVAE(VAE):
 
     def run_hmc(self, x, z):
         self.register_log_prob(x)
-        z, accept_prob = self.hmc(z)
+        z, accept_prob = self.hmc(z.detach().clone())
         return z, accept_prob
 
     def HMC_bound(self, x, x_logits, z):
