@@ -20,8 +20,8 @@ def get(name: str, root: str) -> Tuple[TensorDataset, TensorDataset]:
         if name == "SVHN":
             train = get_data(root, split="train", download=True)
             test = get_data(root, split="test", download=True)
-            X_train, Y_train = torch.tensor(train.data), torch.tensor(train.labels)
-            X_test, Y_test = torch.tensor(test.data), torch.tensor(test.labels)
+            X_train, Y_train = torch.tensor(train.data).float(), torch.tensor(train.labels)
+            X_test, Y_test = torch.tensor(test.data).float(), torch.tensor(test.labels)
         else:
             train = get_data(root, train=True, download=True)
             test = get_data(root, train=False, download=True)
