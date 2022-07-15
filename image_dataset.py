@@ -26,8 +26,8 @@ def get(name: str, root: str) -> Tuple[TensorDataset, TensorDataset]:
             train = get_data(root, train=True, download=True)
             test = get_data(root, train=False, download=True)
             # original shape (N, H, W, C=3) -> (N, C=3, H, W)
-            X_train = torch.tensor(train.data).permute((0, 3, 1, 2))
-            X_test = torch.tensor(test.data).permute((0, 3, 1, 2))
+            X_train = torch.tensor(train.data).permute((0, 3, 1, 2)).float()
+            X_test = torch.tensor(test.data).permute((0, 3, 1, 2)).float()
             Y_train, Y_test = torch.tensor(train.targets), torch.tensor(test.targets)
         Y_train, Y_test = Y_train.reshape(-1, 1).float(), Y_test.reshape(-1, 1).float()
     else:
