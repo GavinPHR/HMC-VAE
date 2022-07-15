@@ -43,7 +43,7 @@ train_dataloader = DataLoader(train, batch_size=100, shuffle=True)
 test_dataloader = DataLoader(test, batch_size=1000, shuffle=False)
 
 in_channels = train.tensors[0].shape[1]
-model = HMCVAE(in_channels, latent_dim=50, T=10, L=5)
+model = HMCVAE(in_channels, latent_dim=50, T=10, L=5).to(device)
 optimizer = optim.Adam(model.parameters())
 
 
