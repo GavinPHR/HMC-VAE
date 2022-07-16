@@ -71,12 +71,12 @@ def train_hmc():
         pz = model.encode(x)
         z = pz.rsample()
         with utils.EnableOnly(model, model.encoder.parameters()):
-            x_logits = model.decode(z).view(*x.shape)
+            x_logits = model.decode(z)
             loss = -model.ELBO(x, x_logits, pz).mean()
             loss.backward()
         with utils.EnableOnly(model, model.decoder.parameters()):
             z, accept_prob = model.run_hmc(x, z)
-            x_logits = model.decode(z).view(*x.shape)
+            x_logits = model.decode(z)
             loss = -model.HMC_bound(x, x_logits, z).mean()
             loss.backward()
         optimizer.step()
@@ -91,7 +91,7 @@ def eval_variational():
             x = x.to(device)
             pz = model.encode(x)
             z = pz.rsample()
-            x_logits = model.decode(z).view(*x.shape)
+            x_logits = model.decode(z)
             elbos.append(model.ELBO(x, x_logits, pz))
     return torch.cat(elbos).mean().item()
 
@@ -106,11 +106,11 @@ def eval_hmc():
             pz = model.encode(x)
             z = pz.rsample()
             with utils.EnableOnly(model, model.encoder.parameters()):
-                x_logits = model.decode(z).view(*x.shape)
+                x_logits = model.decode(z)
                 elbos.append(model.ELBO(x, x_logits, pz))
             with utils.EnableOnly(model, model.decoder.parameters()):
                 z, accept_prob = model.run_hmc(x, z)
-                x_logits = model.decode(z).view(*x.shape)
+                x_logits = model.decode(z)
                 hmc_bounds.append(model.HMC_bound(x, x_logits, z))
     return torch.cat(elbos).mean().item(), torch.cat(hmc_bounds).mean().item()
 
