@@ -57,7 +57,7 @@ def train_variational():
         x = x.to(device)
         pz = model.encode(x)
         z = pz.rsample()
-        x_logits = model.decode(z).view(*x.shape)
+        x_logits = model.decode(z)
         loss = -model.ELBO(x, x_logits, pz).mean()
         loss.backward()
         optimizer.step()
