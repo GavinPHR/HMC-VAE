@@ -10,17 +10,18 @@ class HMCVAE(VAE):
         self,
         in_channels: int,
         latent_dim: int,
+        hidden_channels: int,
         T: int,
         L: int,
     ):
-        super().__init__(in_channels, latent_dim)
+        super().__init__(in_channels, latent_dim, hidden_channels)
         self.hmc = HMC(latent_dim, T, L)
 
     def register_log_prob(self, x):
         def log_prob(z):
             with utils.EnableOnly(self):
-                x_logits = self.decoder(z).view(*x.shape)
-                logp_x = D.ContinuousBernoulli(logits=x_logits).log_prob(x).sum(dim=(-1, -2, -3))
+                x_logits = self.decode(z)
+                logp_x = D.Categorical(logits=x_logits).log_prob(x).sum(dim=(-1, -2, -3))
                 logp_z = D.Normal(0, 1).log_prob(z).sum(dim=-1)
                 return logp_x + logp_z
 
@@ -32,6 +33,6 @@ class HMCVAE(VAE):
         return z, accept_prob
 
     def HMC_bound(self, x, x_logits, z):
-        logp_x = D.ContinuousBernoulli(logits=x_logits).log_prob(x).sum(dim=(-1, -2, -3))
+        logp_x = D.Categorical(logits=x_logits).log_prob(x).sum(dim=(-1, -2, -3))
         logp_z = D.Normal(0, 1).log_prob(z).sum(dim=-1)
         return logp_x + logp_z

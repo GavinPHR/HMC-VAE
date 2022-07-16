@@ -32,6 +32,6 @@ def get(name: str, root: str) -> Tuple[TensorDataset, TensorDataset]:
         Y_train, Y_test = Y_train.reshape(-1, 1).float(), Y_test.reshape(-1, 1).float()
     else:
         raise RuntimeError(f"Dataset {name} not supported.")
-    X_train /= 255
-    X_test /= 255
+    # X_train /= 255
+    # X_test /= 255
     return TensorDataset(X_train, Y_train), TensorDataset(X_test, Y_test)

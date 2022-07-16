@@ -16,6 +16,8 @@ import utils
 parser = argparse.ArgumentParser(description='Configurations parser.')
 parser.add_argument('--data_name', type=str, required=True, help='name of the dataset e.g. yacht')  # pylint: disable=C0301 # noqa: E501
 parser.add_argument('--data_root', type=str, required=True, help='qualified path to the root of data directory')  # pylint: disable=C0301 # noqa: E501
+parser.add_argument('--hidden_channels', type=int, required=True)  # pylint: disable=C0301 # noqa: E501
+parser.add_argument('--epochs', type=int, required=True)  # pylint: disable=C0301 # noqa: E501
 parser.add_argument('--eval_interval', type=float, default=0, help='interval (in steps) between validation e.g. 5e2')  # pylint: disable=C0301 # noqa: E501
 parser.add_argument('--savedir', type=str, default='', help='directory to save logs and checkpoints')  # pylint: disable=C0301 # noqa: E501
 parser.add_argument('--experiment_name', type=str, default='', help='name of the experiment you wish to load, this should have been automatically generated')  # pylint: disable=C0301 # noqa: E501
@@ -39,12 +41,13 @@ else:
 torch.manual_seed(args.seed)
 
 train, test = image_dataset.get(args.data_name, args.data_root)
-train_dataloader = DataLoader(train, batch_size=100, shuffle=True)
+train_dataloader = DataLoader(train, batch_size=64, shuffle=True)
 test_dataloader = DataLoader(test, batch_size=1000, shuffle=False)
 
 in_channels = train.tensors[0].shape[1]
-model = HMCVAE(in_channels, latent_dim=50, T=10, L=5).to(device)
-optimizer = optim.Adam(model.parameters())
+model = HMCVAE(in_channels, latent_dim=100, hidden_channels=args.hidden_channels, T=10, L=5)
+model = model.to(device)
+optimizer = optim.Adam(model.parameters(), lr=5e-4)
 
 
 def train_variational():
@@ -117,7 +120,7 @@ if os.path.exists(path):
     checkpoint = torch.load(path, map_location=device)
     model.load_state_dict(checkpoint["model_state_dict"])
 else:
-    for epoch in tqdm(range(1, 101)):
+    for epoch in tqdm(range(1, args.epochs)):
         train_variational()
         if tensorboard and epoch % args.eval_interval == 0:
             elbo = eval_variational()
@@ -130,11 +133,11 @@ for epoch in tqdm(range(1, 11)):
     train_hmc()
     if tensorboard and epoch % args.eval_interval == 0:
         elbo, hmc_bound = eval_hmc()
-        tensorboard.add_scalar("elbo", elbo, 100 + epoch)
+        tensorboard.add_scalar("elbo", elbo, args.epochs + epoch)
         tensorboard.add_scalar("hmc_bound", hmc_bound, 100 + epoch)
 
 path = os.path.join(args.savedir, args.experiment_name, "hmc")
 torch.save({"model_state_dict": model.state_dict()}, path)
 
 if tensorboard:
-    args.tensorboard.flush()
+    tensorboard.flush()
