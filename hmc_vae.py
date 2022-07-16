@@ -21,7 +21,7 @@ class HMCVAE(VAE):
         def log_prob(z):
             with utils.EnableOnly(self):
                 x_logits = self.decode(z)
-                logp_x = D.Categorical(logits=x_logits).log_prob(x).sum(dim=(-1, -2, -3))
+                logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
                 logp_z = D.Normal(0, 1).log_prob(z).sum(dim=-1)
                 return logp_x + logp_z
 
@@ -33,6 +33,6 @@ class HMCVAE(VAE):
         return z, accept_prob
 
     def HMC_bound(self, x, x_logits, z):
-        logp_x = D.Categorical(logits=x_logits).log_prob(x).sum(dim=(-1, -2, -3))
+        logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
         logp_z = D.Normal(0, 1).log_prob(z).sum(dim=-1)
         return logp_x + logp_z

@@ -70,6 +70,6 @@ class VAE(nn.Module):
         return x_logits.permute(0, 1, 3, 4, 2)
 
     def ELBO(self, x, x_logits, pz):
-        logp_x = D.Categorical(logits=x_logits).log_prob(x).sum(dim=(-1, -2, -3))
+        logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
         kl = D.kl_divergence(pz, D.Normal(0, 1)).sum(dim=-1)
         return logp_x - kl
