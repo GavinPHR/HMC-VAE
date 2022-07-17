@@ -46,7 +46,7 @@ train_dataloader = DataLoader(train, batch_size=64, shuffle=True)
 test_dataloader = DataLoader(test, batch_size=64, shuffle=False)
 
 in_channels = train.tensors[0].shape[1]
-model = HMCVAE(in_channels, latent_dim=100, hidden_channels=args.hidden_channels, T=5, L=5)
+model = HMCVAE(in_channels, latent_dim=100, hidden_channels=args.hidden_channels, T=10, L=5)
 model = model.to(device)
 optimizer = optim.Adam(model.parameters(), lr=5e-4)
 
@@ -138,10 +138,10 @@ for epoch in tqdm(range(1, 11)):
     if tensorboard and epoch % args.eval_interval == 0:
         variational, hmc = eval_hmc()
         tensorboard.add_scalar("variational", variational, args.epochs + epoch)
-        tensorboard.add_scalar("hmc", hmc, 100 + epoch)
+        tensorboard.add_scalar("hmc", hmc, epoch)
 
-path = os.path.join(args.savedir, args.experiment_name, "hmc")
-torch.save({"model_state_dict": model.state_dict()}, path)
+    path = os.path.join(args.savedir, args.experiment_name, f"hmc_epoch{epoch}")
+    torch.save({"model_state_dict": model.state_dict()}, path)
 
 if tensorboard:
     tensorboard.flush()
