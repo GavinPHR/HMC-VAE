@@ -18,5 +18,6 @@ disable=
     empty-docstring,
     missing-class-docstring,
     abstract-method,
-    no-self-use
+    no-self-use,
+    redefined-outer-name
     
