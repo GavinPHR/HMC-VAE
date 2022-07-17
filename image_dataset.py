@@ -6,7 +6,7 @@ import torchvision
 import torchvision.transforms as T
 
 
-def get(name: str, root: str) -> Tuple[TensorDataset, TensorDataset]:
+def get(name: str, root: str, subset: int = None) -> Tuple[TensorDataset, TensorDataset]:
     get_data = getattr(torchvision.datasets, name)
     if name in ["MNIST", "FashionMNIST"]:
         train = get_data(root, train=True, download=True)
@@ -34,4 +34,7 @@ def get(name: str, root: str) -> Tuple[TensorDataset, TensorDataset]:
         raise RuntimeError(f"Dataset {name} not supported.")
     # X_train /= 255
     # X_test /= 255
+    if subset:
+        X_train, Y_train = X_train[:subset], Y_train[:subset]
+        X_test, Y_test = X_test[:subset], Y_test[:subset]
     return TensorDataset(X_train, Y_train), TensorDataset(X_test, Y_test)
