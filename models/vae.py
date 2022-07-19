@@ -20,36 +20,36 @@ class VAE(nn.Module):
             nn.Conv2d(in_channels=in_channels, out_channels=c, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(c),
             nn.ReLU(),
-            # *, 16, 16
+            # c, 16, 16
             nn.Conv2d(in_channels=c, out_channels=2 * c, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(2 * c),
             nn.ReLU(),
-            # *, 8, 8
+            # 2 * c, 8, 8
             nn.Conv2d(in_channels=2 * c, out_channels=4 * c, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(4 * c),
             nn.ReLU(),
-            # *, 4, 4
+            # 4 * c, 4, 4
             nn.Conv2d(in_channels=4 * c, out_channels=2 * latent_dim, kernel_size=4, stride=1),
-            # 200, 1, 1
+            # 2 * latent_dim, 1, 1
         )
         self.decoder = nn.Sequential(
-            # 100, 1, 1
+            # latent_dim, 1, 1
             nn.ConvTranspose2d(in_channels=latent_dim, out_channels=4 * c, kernel_size=4, stride=1),
             nn.BatchNorm2d(4 * c),
             nn.ReLU(),
-            # *, 4, 4
+            # 4 * c, 4, 4
             nn.ConvTranspose2d(
                 in_channels=4 * c, out_channels=2 * c, kernel_size=4, stride=2, padding=1
             ),
             nn.BatchNorm2d(2 * c),
             nn.ReLU(),
-            # *, 8, 8
+            # 2 * c, 8, 8
             nn.ConvTranspose2d(
                 in_channels=2 * c, out_channels=c, kernel_size=4, stride=2, padding=1
             ),
             nn.BatchNorm2d(c),
             nn.ReLU(),
-            # *, 16, 16
+            # c, 16, 16
             nn.ConvTranspose2d(
                 in_channels=c, out_channels=256 * in_channels, kernel_size=4, stride=2, padding=1
             ),
