@@ -10,13 +10,14 @@ import torch.distributions as D
 from tqdm import tqdm
 
 import image_dataset
-from hmc_vae import HMCVAE
+from models.hmc_vae import HMCVAE
 import utils
 
 # fmt: off
 parser = argparse.ArgumentParser(description='Configurations parser.')
 parser.add_argument('--data_name', type=str, required=True, help='name of the dataset e.g. yacht')  # pylint: disable=C0301 # noqa: E501
 parser.add_argument('--data_root', type=str, required=True, help='qualified path to the root of data directory')  # pylint: disable=C0301 # noqa: E501
+parser.add_argument('--latent_dims', metavar='d', type=int, nargs='+', required=True, help='latent dimensions e.g. 5 10')  # pylint: disable=C0301 # noqa: E501
 parser.add_argument('--hidden_channels', type=int, required=True)  # pylint: disable=C0301 # noqa: E501
 parser.add_argument('--epochs', type=int, required=True)  # pylint: disable=C0301 # noqa: E501
 parser.add_argument('--eval_interval', type=float, default=0, help='interval (in steps) between validation e.g. 5e2')  # pylint: disable=C0301 # noqa: E501
@@ -46,7 +47,9 @@ train_dataloader = DataLoader(train, batch_size=64, shuffle=True)
 test_dataloader = DataLoader(test, batch_size=64, shuffle=False)
 
 in_channels = train.tensors[0].shape[1]
-model = HMCVAE(in_channels, latent_dim=100, hidden_channels=args.hidden_channels, T=10, L=5)
+model = HMCVAE(
+    in_channels, latent_dims=args.latent_dims, hidden_channels=args.hidden_channels, T=10, L=5
+)
 model = model.to(device)
 optimizer = optim.Adam(model.parameters(), lr=5e-4)
 
@@ -56,10 +59,10 @@ def train_variational():
     for x, _ in train_dataloader:
         optimizer.zero_grad()
         x = x.to(device)
-        pz = model.encode(x)
-        z = pz.rsample()
-        x_logits = model.decode(z)
-        loss = -model.ELBO(x, x_logits, pz).mean()
+        pz_list = model.encode(x)
+        z_list = [pz.rsample() for pz in pz_list]
+        x_logits = model.decode(z_list)
+        loss = -model.ELBO(x, x_logits, pz_list).mean()
         loss.backward()
         optimizer.step()
 
@@ -69,16 +72,16 @@ def train_hmc():
     for x, _ in train_dataloader:
         optimizer.zero_grad()
         x = x.to(device)
-        pz = model.encode(x)
-        z = pz.rsample()
-        with utils.EnableOnly(model, model.encoder.parameters()):
-            x_logits = model.decode(z)
-            loss = -model.ELBO(x, x_logits, pz).mean()
+        pz_list = model.encode(x)
+        z_list = [pz.rsample() for pz in pz_list]
+        with utils.EnableOnly(model, model.encoding_parameters()):
+            x_logits = model.decode(z_list)
+            loss = -model.ELBO(x, x_logits, pz_list).mean()
             loss.backward()
-        with utils.EnableOnly(model, model.decoder.parameters()):
-            z, accept_prob = model.run_hmc(x, z)
-            x_logits = model.decode(z)
-            loss = -model.HMC_bound(x, x_logits, z).mean()
+        with utils.EnableOnly(model, model.decoding_parameters()):
+            z_list, accept_prob = model.run_hmc(x, z_list)
+            x_logits = model.decode(z_list)
+            loss = -model.HMC_bound(x, x_logits, z_list).mean()
             loss.backward()
         optimizer.step()
     print(accept_prob)
@@ -90,9 +93,9 @@ def eval_variational():
     with torch.no_grad():
         for x, _ in test_dataloader:
             x = x.to(device)
-            pz = model.encode(x)
-            z = pz.rsample()
-            x_logits = model.decode(z)
+            pz_list = model.encode(x)
+            z_list = [pz.rsample() for pz in pz_list]
+            x_logits = model.decode(z_list)
             logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
             variational.append(logp_x)
     return torch.cat(variational).mean().item()
@@ -105,17 +108,17 @@ def eval_hmc():
     with torch.no_grad():
         for x, _ in test_dataloader:
             x = x.to(device)
-            pz = model.encode(x)
-            z = pz.rsample()
-            with utils.EnableOnly(model, model.encoder.parameters()):
-                x_logits = model.decode(z)
-                logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
-                variational.append(logp_x)
-            with utils.EnableOnly(model, model.decoder.parameters()):
-                z, accept_prob = model.run_hmc(x, z)
-                x_logits = model.decode(z)
-                logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
-                hmc.append(logp_x)
+            pz_list = model.encode(x)
+            z_list = [pz.rsample() for pz in pz_list]
+            # Variational
+            x_logits = model.decode(z_list)
+            logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
+            variational.append(logp_x)
+            # HMC
+            z_list, accept_prob = model.run_hmc(x, z_list)
+            x_logits = model.decode(z_list)
+            logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
+            hmc.append(logp_x)
     return torch.cat(variational).mean().item(), torch.cat(hmc).mean().item()
 
 
