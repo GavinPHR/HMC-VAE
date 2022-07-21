@@ -58,8 +58,10 @@ class VAE(nn.Module):
         x_logits = h.view(N, self.in_channels, 256, H, W)
         return x_logits.permute(0, 1, 3, 4, 2)
 
-    def ELBO(self, x, x_logits, pz_list):
+    def ELBO(self, x, x_logits, pz_list, beta=None):
         logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
         prior = D.Normal(0, 1)
         kl = sum(D.kl_divergence(pz, prior).sum(dim=-1) for pz in pz_list)
-        return logp_x - kl
+        if beta is None:
+            return logp_x - kl
+        return logp_x - beta * kl

@@ -55,7 +55,7 @@ model = model.to(device)
 optimizer = optim.Adam(model.parameters(), lr=5e-4)
 
 
-def train_variational():
+def train_variational(beta):
     model.train()
     for x, _ in train_dataloader:
         optimizer.zero_grad()
@@ -63,7 +63,7 @@ def train_variational():
         pz_list = model.encode(x)
         z_list = [pz.rsample() for pz in pz_list]
         x_logits = model.decode(z_list)
-        loss = -model.ELBO(x, x_logits, pz_list).mean()
+        loss = -model.ELBO(x, x_logits, pz_list, beta).mean()
         loss.backward()
         optimizer.step()
 
@@ -128,8 +128,10 @@ if os.path.exists(path):
     checkpoint = torch.load(path, map_location=device)
     model.load_state_dict(checkpoint["model_state_dict"])
 else:
+    anneal_epochs = int(0.1 * args.epochs)
     for epoch in tqdm(range(1, args.epochs + 1)):
-        train_variational()
+        beta = torch.tensor(min((epoch - 1) / anneal_epochs, 1)).to(device)
+        train_variational(beta)
         if tensorboard and epoch % args.eval_interval == 0:
             variational = eval_variational()
             tensorboard.add_scalar("variational", variational, epoch)
