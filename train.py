@@ -137,7 +137,7 @@ else:
     os.makedirs(os.path.join(args.savedir, args.experiment_name), exist_ok=True)
     torch.save({"model_state_dict": model.state_dict()}, path)
 
-for epoch in tqdm(range(1, 11)):
+for epoch in tqdm(range(1, 6)):
     train_hmc()
     if tensorboard and epoch % args.eval_interval == 0:
         variational, hmc = eval_hmc()
