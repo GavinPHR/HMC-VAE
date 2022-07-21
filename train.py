@@ -128,7 +128,7 @@ if os.path.exists(path):
     checkpoint = torch.load(path, map_location=device)
     model.load_state_dict(checkpoint["model_state_dict"])
 else:
-    for epoch in tqdm(range(1, args.epochs)):
+    for epoch in tqdm(range(1, args.epochs + 1)):
         train_variational()
         if tensorboard and epoch % args.eval_interval == 0:
             variational = eval_variational()
