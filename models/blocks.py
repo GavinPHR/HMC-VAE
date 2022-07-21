@@ -47,11 +47,7 @@ class LatentBlock(nn.Module):
     ):
         super().__init__()
         self.conv_normal = nn.Conv2d(in_channels, 2 * latent_dim, kernel_size, stride=1)
-        self.conv_transpose = nn.Sequential(
-            nn.ConvTranspose2d(latent_dim, in_channels, kernel_size, stride=1),
-            nn.BatchNorm2d(in_channels),
-            nn.ReLU(),
-        )
+        self.conv_transpose = nn.ConvTranspose2d(latent_dim, in_channels, kernel_size, stride=1)
 
     def encode(self, x):
         x = self.conv_normal(x)

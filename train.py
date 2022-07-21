@@ -30,7 +30,8 @@ args = parser.parse_args()
 
 if args.experiment_name == "":
     args.experiment_name = (
-        f"{args.data_name}_{strftime('%Hh_%Mm_%d_%b_%Y', localtime())}_seed{args.seed}"
+        f"{args.data_name}_{args.latent_dims}_"
+        f"{strftime('%Hh_%Mm_%d_%b_%Y', localtime())}_seed{args.seed}"
     )
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
