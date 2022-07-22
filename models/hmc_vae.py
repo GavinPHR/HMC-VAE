@@ -23,8 +23,10 @@ class HMCVAE(VAE):
     def register_log_prob(self, x):
         def log_prob(z):
             with utils.EnableOnly(self):
+                self.eval()
                 z_list = torch.split(z, self.latent_dims, dim=-1)
                 x_logits = self.decode(z_list)
+                self.train()
                 return self.HMC_bound(x, x_logits, z_list)
 
         self.hmc.register_log_prob(log_prob)

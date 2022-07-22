@@ -91,6 +91,7 @@ def train_hmc():
 def eval_variational():
     model.eval()
     variational = []
+    elbo = []
     with torch.no_grad():
         for x, _ in test_dataloader:
             x = x.to(device)
@@ -98,13 +99,17 @@ def eval_variational():
             z_list = [pz.rsample() for pz in pz_list]
             x_logits = model.decode(z_list)
             logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
+            prior = D.Normal(0, 1)
+            kl = sum(D.kl_divergence(pz, prior).sum(dim=-1) for pz in pz_list)
             variational.append(logp_x)
-    return torch.cat(variational).mean().item()
+            elbo.append(logp_x - kl)
+    return torch.cat(variational).mean().item(), torch.cat(elbo).mean().item()
 
 
 def eval_hmc():
     model.eval()
     variational = []
+    elbo = []
     hmc = []
     with torch.no_grad():
         for x, _ in test_dataloader:
@@ -114,13 +119,20 @@ def eval_hmc():
             # Variational
             x_logits = model.decode(z_list)
             logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
+            prior = D.Normal(0, 1)
+            kl = sum(D.kl_divergence(pz, prior).sum(dim=-1) for pz in pz_list)
             variational.append(logp_x)
+            elbo.append(logp_x - kl)
             # HMC
             z_list, accept_prob = model.run_hmc(x, z_list)
             x_logits = model.decode(z_list)
             logp_x = D.Categorical(logits=x_logits).log_prob(x.int()).sum(dim=(-1, -2, -3))
             hmc.append(logp_x)
-    return torch.cat(variational).mean().item(), torch.cat(hmc).mean().item()
+    return (
+        torch.cat(variational).mean().item(),
+        torch.cat(elbo).mean().item(),
+        torch.cat(hmc).mean().item(),
+    )
 
 
 path = os.path.join(args.savedir, args.experiment_name, "variational")
@@ -133,8 +145,9 @@ else:
         # beta = torch.tensor(min((epoch - 1) / anneal_epochs, 1)).to(device)
         train_variational()
         if tensorboard and epoch % args.eval_interval == 0:
-            variational = eval_variational()
+            variational, elbo = eval_variational()
             tensorboard.add_scalar("variational", variational, epoch)
+            tensorboard.add_scalar("elbo", elbo, epoch)
 
     os.makedirs(os.path.join(args.savedir, args.experiment_name), exist_ok=True)
     torch.save({"model_state_dict": model.state_dict()}, path)
@@ -142,9 +155,10 @@ else:
 for epoch in tqdm(range(1, 6)):
     train_hmc()
     if tensorboard and epoch % args.eval_interval == 0:
-        variational, hmc = eval_hmc()
+        variational, elbo, hmc = eval_hmc()
         tensorboard.add_scalar("variational", variational, args.epochs + epoch)
-        tensorboard.add_scalar("hmc", hmc, epoch)
+        tensorboard.add_scalar("elbo", elbo, args.epochs + epoch)
+        tensorboard.add_scalar("hmc", hmc, args.epochs + epoch)
 
     path = os.path.join(args.savedir, args.experiment_name, f"hmc_epoch{epoch}")
     torch.save({"model_state_dict": model.state_dict()}, path)
