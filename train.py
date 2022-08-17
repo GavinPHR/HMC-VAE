@@ -15,9 +15,9 @@ import utils
 
 # fmt: off
 parser = argparse.ArgumentParser(description='Configurations parser.')
-parser.add_argument('--data_name', type=str, required=True, help='name of the dataset e.g. yacht')  # pylint: disable=C0301 # noqa: E501
-parser.add_argument('--data_root', type=str, required=True, help='qualified path to the root of data directory')  # pylint: disable=C0301 # noqa: E501
-parser.add_argument('--latent_dims', metavar='d', type=int, nargs='+', required=True, help='latent dimensions e.g. 5 10')  # pylint: disable=C0301 # noqa: E501
+parser.add_argument('--data_name', type=str, required=True, help='name of the dataset e.g. MNIST')  # pylint: disable=C0301 # noqa: E501
+parser.add_argument('--data_root', type=str, required=True, help='path to the root of data directory')  # pylint: disable=C0301 # noqa: E501
+parser.add_argument('--latent_dims', metavar='d', type=int, nargs='+', required=True, help='latent dimensions e.g. 30 30')  # pylint: disable=C0301 # noqa: E501
 parser.add_argument('--hidden_channels', type=int, required=True)  # pylint: disable=C0301 # noqa: E501
 parser.add_argument('--epochs', type=int, required=True)  # pylint: disable=C0301 # noqa: E501
 parser.add_argument('--eval_interval', type=float, default=0, help='interval (in steps) between validation e.g. 5e2')  # pylint: disable=C0301 # noqa: E501
@@ -140,9 +140,7 @@ if os.path.exists(path):
     checkpoint = torch.load(path, map_location=device)
     model.load_state_dict(checkpoint["model_state_dict"])
 else:
-    # anneal_epochs = int(0.1 * args.epochs)
     for epoch in tqdm(range(1, args.epochs + 1)):
-        # beta = torch.tensor(min((epoch - 1) / anneal_epochs, 1)).to(device)
         train_variational()
         if tensorboard and epoch % args.eval_interval == 0:
             variational, elbo = eval_variational()
@@ -152,6 +150,7 @@ else:
     os.makedirs(os.path.join(args.savedir, args.experiment_name), exist_ok=True)
     torch.save({"model_state_dict": model.state_dict()}, path)
 
+# Hard code 3 HMC epochs, 1 HMC epoch takes roughly 50 times longer than variational
 for epoch in tqdm(range(1, 4)):
     train_hmc()
     if tensorboard and epoch % args.eval_interval == 0:

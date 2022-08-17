@@ -7,6 +7,8 @@ from models.blocks import EncoderBlock, LatentBlock, DecoderBlock
 
 
 class VAE(nn.Module):
+    """VAE with hierarchical latent variables as described in Zhao et al. (2017)."""
+
     def __init__(
         self,
         in_channels: int,

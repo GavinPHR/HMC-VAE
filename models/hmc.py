@@ -8,7 +8,7 @@ class HMC(nn.Module):
     """A basic implementation of Hamiltonian Monte Carlo.
 
     T iterations of HMC and L leapfrog steps per iteration.
-    Step size is tuned to have 95% global acceptance rate.
+    Step size is tuned to have 65% acceptance rate (across batch).
     """
 
     def __init__(

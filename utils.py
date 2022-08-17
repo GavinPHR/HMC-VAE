@@ -1,11 +1,3 @@
-import torch
-
-
-def logmeanexp(log_prob, dim):
-    k = log_prob.shape[dim]
-    return torch.logsumexp(log_prob, dim=dim) - torch.log(torch.tensor(k, device=log_prob.device))
-
-
 class EnableOnly:
     """Context manager for switching on and off only part of a model."""
 

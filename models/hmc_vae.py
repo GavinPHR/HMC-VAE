@@ -9,6 +9,8 @@ import utils
 
 
 class HMCVAE(VAE):
+    """Hierarchical VAEs with HMC as described in Hoffman (2017)."""
+
     def __init__(
         self,
         in_channels: int,

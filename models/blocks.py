@@ -1,3 +1,4 @@
+"""Conv/ConvTranspose building blocks for convolutional VAEs."""
 import torch
 from torch import nn
 import torch.distributions as D
