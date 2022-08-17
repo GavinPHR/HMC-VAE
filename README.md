@@ -2,7 +2,7 @@
 This repository contains code for hierarchical convolutional variational autoencoders with Hamiltonian Monte Carlo, which accompanies my MPhil thesis at University of Cambridge.
 
 ### Directory Structure
-The reposiroty contains 7 files:
+The reposiroty contains 7 Python files:
 ```
 models/hmc.py      # Basic version of Hamiltonian Monte Carlo
 models/blocks.py   # Conv/ConvTranspose building blocks for the model
@@ -12,6 +12,7 @@ image_dataset.py   # Download and preprocess image datasets
 utils.py           # Utility for turning on/off parts of a model
 train.py           # Main entry point for traning
 ```
+And my thesis `thesis.pdf` that details theoretical background, implementation details, and experimental results.
 
 ### Example
 The command below trains a model with 2 latent layers each containing 30 units, and 64 filters, on the dataset CIFAR10 (which is stored in `./data`), for 100 epochs (100 variational epochs and hard-coded 3 HMC epochs), with the test set evaluated after every 1 epoch, where both trained model and test set scores are written to `/path/to/save/`.
